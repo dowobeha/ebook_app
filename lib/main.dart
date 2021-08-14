@@ -7,15 +7,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Welcome to Flutter',
-      home: Scaffold(
+      title: 'Startup Name Generator',
+      theme: ThemeData(primaryColor: Colors.white),
+      home: RandomWords() /*Scaffold(
         appBar: AppBar(
           title: const Text('Welcome to Flutter'),
         ),
         body: Center(
           child: RandomWords(), // RandomWords is a stateful widget
         ),
-      ),
+      ), */
     );
   }
 }
@@ -29,15 +30,30 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
 
-  final _suggestions = <WordPair>[];
+  final _suggestions = <WordPair>[];  // A list of WordPair objects
+  final _saved = <WordPair>{};        // A set of WordPair objects
   final _biggerFont = const TextStyle(fontSize: 18.0);
 
   Widget _buildRow(WordPair pair) {
+    final bool alreadySaved = _saved.contains(pair);
     return ListTile(
       title: Text(
         pair.asPascalCase,
         style: _biggerFont,
-      )
+      ),
+      trailing: Icon(
+        alreadySaved ? Icons.favorite : Icons.favorite_border,
+        color: alreadySaved ? Colors.red : null,
+      ),
+      onTap: () {
+        setState(() {
+          if (alreadySaved) {
+            _saved.remove(pair);
+          } else {
+            _saved.add(pair);
+          }
+        });
+      },
     );
   }
 
@@ -57,11 +73,43 @@ class _RandomWordsState extends State<RandomWords> {
 
   }
 
+  void _pushSaved() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+          builder: (BuildContext context) {
+            final tiles = _saved.map(
+                (WordPair pair) {
+                  return ListTile(
+                    title: Text(
+                      pair.asPascalCase,
+                      style: _biggerFont,
+                    )
+                  );
+                }
+            );
+            final divided = tiles.isNotEmpty
+                ? ListTile.divideTiles(context: context, tiles: tiles).toList()
+                : <Widget>[];
+
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('Saved Suggestions'),
+              ),
+              body: ListView(children: divided)
+            );
+          }
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Startup Name Generator'),
+        actions: [
+          IconButton(onPressed: _pushSaved, icon: Icon(Icons.list)),
+        ],
       ),
       body: _buildSuggestions(),
     );
