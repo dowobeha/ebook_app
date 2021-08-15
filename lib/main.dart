@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 
+import 'dart:ffi'; // For FFI
+import 'dart:io'; // For Platform.isX
+
+final DynamicLibrary nativeAddLib = Platform.isAndroid
+    ? DynamicLibrary.open("libnative_add.so")
+    : DynamicLibrary.process();
+
+final int Function(int x, int y) nativeAdd =
+nativeAddLib
+    .lookup<NativeFunction<Int32 Function(Int32, Int32)>>("native_add")
+    .asFunction();
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -93,7 +105,7 @@ class _RandomWordsState extends State<RandomWords> {
 
             return Scaffold(
               appBar: AppBar(
-                title: Text('Saved Suggestions'),
+                title: Text('Saved Suggestions: ${nativeAdd(1, 2)}'),
               ),
               body: ListView(children: divided)
             );
